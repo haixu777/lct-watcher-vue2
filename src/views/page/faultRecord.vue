@@ -5,13 +5,13 @@
         <template scope="props">
           <el-form label-position="left" inline class="table-expand">
             <el-form-item label="CPU">
-              <span>{{ props.row.cpu }}</span>
+              <span>{{ props.row.CPU }}</span>
             </el-form-item>
             <el-form-item label="MEMORY">
-              <span>{{ props.row.memory }}</span>
+              <span>{{ props.row.MEMORY }}</span>
             </el-form-item>
             <el-form-item label="DISK">
-              <span>{{ props.row.disk }}</span>
+              <span>{{ props.row.DISK }}</span>
             </el-form-item>
           </el-form>
         </template>
@@ -23,12 +23,12 @@
       </el-table-column>
       <el-table-column align="center" label='系统' width="95">
         <template scope="scope">
-          {{scope.row.appName}}
+          {{scope.row.module.app.name}}
         </template>
       </el-table-column>
       <el-table-column label="模块" width="110" align="center">
         <template scope="scope">
-          {{scope.row.moduleName}}
+          {{scope.row.module.name}}
         </template>
       </el-table-column>
       <el-table-column label="metric" width="110" align="center">
@@ -41,63 +41,79 @@
           {{scope.row.desc}}
         </template>
       </el-table-column>
-      <el-table-column label="通知状态" width="130" align="center">
+      <el-table-column label="状态" width="130" align="center">
         <template scope="scope">
-          <el-tag :type="scope.row.status | statusFilter">{{scope.row.status}}</el-tag>
+          <el-tag :type="scope.row.fixed | statusFilter">{{ scope.row.fixed ? '已修复' : '故障中'}}</el-tag>
         </template>
       </el-table-column>
       <el-table-column align="center" prop="time" label="时间" width="200">
         <template scope="scope">
           <i class="el-icon-time"></i>
-          <span>{{scope.row.time}}</span>
+          <span>{{formatTime(new Date(scope.row.time))}}</span>
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      style="float:right;"
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="currentPage"
+      :page-sizes="[15, 30, 50, 100]"
+      :page-size="perItem"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="totalItem">
+    </el-pagination>
   </div>
 </template>
 
 <script>
+import { getList } from '@/api/record'
 export default {
   data() {
     return {
-      list: [
-        {
-          appName: '预制拦截',
-          moduleName: 'xx模块',
-          metric: 'metric_asd',
-          desc: '三大困难时刻记得你啊离开我们的离开',
-          time: '2017-11-07 14:32:02',
-          status: '邮件发送成功',
-          cpu: '123',
-          memory: '222',
-          disk: '239Mb'
-        },
-        {
-          appName: '预制拦截',
-          moduleName: 'xx模块',
-          metric: 'metric_asd',
-          desc: '三大困难时刻记得你啊离开我们的离开',
-          time: '2017-11-07 14:32:02',
-          status: '邮件发送失败',
-          cpu: '932',
-          memory: '23',
-          disk: '123Mb'
-        }
-      ],
-      listLoading: false
+      list: [],
+      perItem: 15,
+      currentPage: 1,
+      listLoading: false,
+      totalItem: 100
     }
   },
   filters: {
     statusFilter(status) {
       const statusMap = {
-        邮件发送成功: 'success',
-        邮件发送失败: 'danger',
+        1: 'success',
+        0: 'danger',
         deleted: 'danger'
       }
       return statusMap[status]
     }
   },
   methods: {
+    fetchList() {
+      getList({
+        perItem: this.perItem,
+        currentPage: this.currentPage
+      }).then((res) => {
+        this.list = res.data.rows
+        this.totalItem = res.data.count
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    handleSizeChange(size) {
+      this.perItem = size;
+      this.fetchList();
+    },
+    handleCurrentChange(index) {
+      this.currentPage = index;
+      this.fetchList();
+    },
+    formatTime(d) {
+      return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + '/' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds()
+    }
+  },
+  mounted() {
+    this.fetchList()
   }
 }
 </script>

@@ -25,6 +25,22 @@ export default {
     sidebar() {
       return this.$store.state.app.sidebar
     }
+  },
+  mounted() {
+    this.$options.sockets.notice = (data) => {
+      console.log(data);
+      this.$Notice.warning({
+        title: '系统异常',
+        desc: '异常信息blabla'
+      });
+    };
+    this.$options.sockets.noticeCancel = (data) => {
+      console.log(data);
+      this.$Notice.success({
+        title: '系统恢复正常',
+        desc: 'normal msg blablabla'
+      })
+    };
   }
 }
 </script>

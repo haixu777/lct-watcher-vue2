@@ -63,6 +63,8 @@ export default {
     this.fetchAppModuleList();
 
     this.$options.sockets.notice = (data) => {
+      console.log(`get notice`);
+      console.log(data);
       this.appModuleList.forEach((app) => {
         if (app.id == data.app_id) {
           this.appStatus.forEach((_app) => {
@@ -75,6 +77,8 @@ export default {
     }
 
     this.$options.sockets.noticeCancel = (data) => {
+      console.log(`get notice cancel`);
+      console.log(data);
       this.appModuleList.forEach((app) => {
         if (app.id == data.app_id) {
           this.appStatus.forEach((_app) => {

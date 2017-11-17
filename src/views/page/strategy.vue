@@ -66,7 +66,12 @@
           {{scope.row.note}}
         </template>
       </el-table-column>
-      <el-table-column label="status" align="center" fixed="right">
+      <el-table-column label="下发邮箱" width="130" align="center">
+        <template scope="scope">
+          {{scope.row.email}}
+        </template>
+      </el-table-column>
+      <el-table-column label="目前状态" align="center" fixed="right">
         <template scope="scope">
           {{scope.row.status}}
         </template>

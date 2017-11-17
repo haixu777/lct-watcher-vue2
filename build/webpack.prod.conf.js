@@ -11,10 +11,6 @@ var OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
 
 var env = config.build.env
 
-function resolveApp(relativePath) {
-    return path.resolve(relativePath);
-}
-
 var webpackConfig = merge(baseWebpackConfig, {
   module: {
     rules: utils.styleLoaders({
@@ -57,7 +53,6 @@ var webpackConfig = merge(baseWebpackConfig, {
       filename: config.build.index,
       template: 'index.html',
       inject: true,
-      favicon: resolveApp('favicon.ico'),
       minify: {
         removeComments: true,
         collapseWhitespace: true,
@@ -68,8 +63,6 @@ var webpackConfig = merge(baseWebpackConfig, {
       // necessary to consistently work with multiple chunks via CommonsChunkPlugin
       chunksSortMode: 'dependency'
     }),
-    // cache Module Identifiers
-    new webpack.HashedModuleIdsPlugin(),
     // split vendor js into its own file
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',

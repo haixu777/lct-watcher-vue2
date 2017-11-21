@@ -28,7 +28,8 @@ export default {
         { name: '相似系统', code: 'XSXT', note: '', module: '', status: 1 },
         { name: '音视频', code: 'YSP', note: '', module: '', status: 1 },
         { name: '直播系统', code: 'ZBXT', note: '', module: '', status: 1 },
-        { name: '账号系统', code: 'ZHXT', note: '', module: '', status: 1 }
+        { name: '账号系统', code: 'ZHXT', note: '', module: '', status: 1 },
+        { name: '关键词系统', code: 'GJC', note: '', module: '', status: 1 },
       ],
       appModuleList: [],
       currentStatus: []

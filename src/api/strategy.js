@@ -7,3 +7,13 @@ export function getList(params) {
     params
   })
 }
+
+export function handleDelToServer(id) {
+  return fetch({
+    url: '/strategy/del',
+    method: 'post',
+    data: {
+      id
+    }
+  })
+}

@@ -83,9 +83,15 @@
               {{scope.row.email}}
             </template>
           </el-table-column>
-          <el-table-column label="状态" align="center" fixed="right">
+          <el-table-column label="状态" align="center">
             <template scope="scope">
               {{scope.row.status}}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" fixed="right" width="95">
+            <template scope="scope">
+              <el-button type="primary" icon="edit" size="mini" :disabled="Boolean(scope.row.update_stat)" @click="handleEdit(scope.row)"></el-button>
+              <el-button type="danger" icon="delete" size="mini" :disabled="Boolean(scope.row.del_stat)" @click="handleDel(scope.row)"></el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -105,7 +111,7 @@
 </template>
 
 <script>
-import { getList } from '@/api/strategy';
+import { getList, handleDelToServer } from '@/api/strategy';
 import { getAppModuleTree } from '@/api/home';
 
 export default {
@@ -117,6 +123,8 @@ export default {
       totalItem: null,
       listLoading: false,
       treeData: [],
+      moduleId: null,
+      appId: null,
       defaultProps: {
         children: 'children',
         label: 'name'
@@ -127,7 +135,9 @@ export default {
     fetchList() {
       getList({
         perItem: this.perItem,
-        currentPage: this.currentPage
+        currentPage: this.currentPage,
+        appId: this.appId,
+        moduleId: this.moduleId
       }).then((res) => {
         this.list = res.data.rows
         this.totalItem = res.data.count
@@ -144,14 +154,30 @@ export default {
           console.log(err)
         })
     },
+    delToServer(id) {
+      handleDelToServer(id).then((res) => {
+        this.$message({
+          type: 'success',
+          message: res.msg
+        })
+        this.fetchList();
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
     renderContent(h, { node, data, store }) {
+      let trigger_add = Boolean(data.children) ? 'inline-block' : 'none'
+      let trigger_del = Boolean(data.children) ? 'none' : 'inline-block'
       return (
         <span>
           <span>
             <span>{node.label}</span>
           </span>
-          <span style="float: right; margin-right: 20px; display: none;">
-            <el-button size="mini">+</el-button>
+          <span style={"float: right; margin-right: 20px;display:"+trigger_add}>
+            <el-button size="mini" icon="plus" type="success"></el-button>
+          </span>
+          <span style={"float: right; margin-right: 20px;display:"+trigger_del}>
+            <el-button size="mini" icon="delete" type="danger"></el-button>
           </span>
         </span>
       );
@@ -162,10 +188,37 @@ export default {
     },
     handleCurrentChange(page) {
       this.currentPage = page;
-      this.fetch();
+      this.fetchList();
     },
-    handleNodeClick(e) {
-      console.log(e);
+    handleNodeClick(app) {
+      this.appId = null
+      this.moduleId = null
+      if (app.children) {
+        this.appId = app.id
+      } else {
+        this.moduleId = app.id
+      }
+      this.fetchList();
+    },
+    handleEdit (strategy) {
+      this.$message({
+        type: 'info',
+        message: '功能开发中...'
+      });
+    },
+    handleDel (strategy) {
+      this.$confirm('此操作将永久删除该条'+strategy.metric+'策略, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        this.delToServer(strategy.id)
+      }).catch(() => {
+        this.$message({
+          type: 'info',
+          message: '已取消删除'
+        });
+      })
     }
   },
   mounted() {
@@ -179,7 +232,7 @@ export default {
   min-width: 750px;
   .strategyTree {
     display: inline-block;
-    width: 120px;
+    width: 140px;
     .strategyTree_title {
       height: 40px;
       line-height: 40px;
@@ -191,7 +244,7 @@ export default {
   }
   .strategyContent {
     display: inline-block;
-    width: calc(99% - 120px);
+    width: calc(99% - 140px);
     vertical-align: top;
   }
 }

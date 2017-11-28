@@ -15,3 +15,11 @@ export function getAppModuleList(params) {
     params
   })
 }
+
+export function getAppModuleTree(params) {
+  return fetch({
+    url: '/app/tree',
+    method: 'get',
+    params
+  })
+}

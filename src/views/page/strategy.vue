@@ -112,6 +112,7 @@
 
 <script>
 import { getList, handleDelToServer } from '@/api/strategy';
+import { moduleDel } from '@/api/module';
 import { getAppModuleTree } from '@/api/home';
 
 export default {
@@ -165,19 +166,69 @@ export default {
         console.log(err)
       })
     },
+    delMoudleToServer(id) {
+      moduleDel(id).then((res) => {
+        this.$message({
+          type: 'success',
+          message: res.msg
+        })
+        this.fetchAppTree();
+        this.fetchList();
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
     renderContent(h, { node, data, store }) {
       let trigger_add = Boolean(data.children) ? 'inline-block' : 'none'
       let trigger_del = Boolean(data.children) ? 'none' : 'inline-block'
+      const __moduleAdd_btn = h('el-button', {
+        props: {
+          type: 'success',
+          size: 'mini',
+          icon: 'plus'
+        },
+        nativeOn: {
+          click: () => {
+          }
+        }
+      })
+
+      const __moduleDel_btn = h('Poptip',{
+        props: {
+          title: `确定删除模块：${data.name}？`,
+          confirm: true
+        },
+        on: {
+          'on-ok': () => {
+            this.delMoudleToServer(data.id)
+          },
+          'on-cancel': () => {
+            this.$message({
+              type: 'info',
+              message: '已取消删除'
+            })
+          }
+        }
+      }, [
+        h('el-button', {
+          props: {
+            type: 'danger',
+            size: 'mini',
+            icon: 'delete'
+          }
+        })
+      ])
+
       return (
         <span>
           <span>
             <span>{node.label}</span>
           </span>
           <span style={"float: right; margin-right: 20px;display:"+trigger_add}>
-            <el-button size="mini" icon="plus" type="success"></el-button>
+            {__moduleAdd_btn}
           </span>
           <span style={"float: right; margin-right: 20px;display:"+trigger_del}>
-            <el-button size="mini" icon="delete" type="danger"></el-button>
+            {__moduleDel_btn}
           </span>
         </span>
       );

@@ -10,6 +10,7 @@
           :render-content="renderContent"
           @node-click="handleNodeClick">
         </el-tree>
+        <el-button type="warning" size="mini" style="width:100%;" @click="metricModal = true; metricAdd = true">metric添加</el-button>
       </div>
       <div class="strategyContent">
         <el-table :data="list" v-loading.body="listLoading" element-loading-text="拼命加载中" border fit highlight-current-row stripe>
@@ -107,16 +108,85 @@
         </el-pagination>
       </div>
     </div>
+
+    <!-- metric添加dialog start -->
+    <Modal v-model="metricModal" width="400">
+      <p slot="header" style="color:#f7ba2a;text-align:center">
+        <Icon type="information-circled"></Icon>
+        <span>{{ metricAdd ? 'metric添加' : 'metric编辑' }}</span>
+      </p>
+        <div style="text-align:center">
+          <Form :model="formMetric" ref="dynamicValidateForm" :rules="rules" :label-width="80">
+            <FormItem label="所属模块" prop="app">
+              <Cascader :data="[]" trigger="hover"></Cascader>
+            </FormItem>
+            <FormItem label="metric" prop="metric">
+              <Input v-model="formMetric.metric" placeholder="Enter something..."></Input>
+            </FormItem>
+            <FormItem label="endPoint" prop="endPoint">
+              <Input v-model="formMetric.endPoint" placeholder="Enter something..."></Input>
+            </FormItem>
+            <FormItem label="策略" prop="func">
+              <span>if</span>
+              <Input v-model="formMetric.func" class="strategy_input" placeholder="all(#1)"></Input>
+              <Select v-model="formMetric.operator" class="strategy_input" placeholder="operator">
+                <Option value="==">==</Option>
+                <Option value="!=">!=</Option>
+                <Option value="<"><</Option>
+                <Option value="<="><=</Option>
+                <Option value=">">></Option>
+                <Option value=">=">>=</Option>
+              </Select>
+              <InputNumber class="strategy_input" :max="10" :min="1" v-model="formMetric.rightValue" placeholder="rightValue"></InputNumber>
+            </FormItem>
+            <FormItem label="maxStep" prop="maxStep">
+              <InputNumber :max="10" :min="1" v-model="formMetric.maxStep" style="float:left;"></InputNumber>
+              <span style="">间隔</span>
+              <InputNumber :max="10000" :min="1000" :step="100" v-model="formMetric.step" style=""></InputNumber>
+            </FormItem>
+            <FormItem label="note" prop="note">
+              <Input v-model="formMetric.note" type="textarea" placeholder="Enter something..."></Input>
+            </FormItem>
+            <FormItem label="email" prop="email">
+              <Input v-model="formMetric.email" placeholder="Enter something..."></Input>
+            </FormItem>
+          </Form>
+        </div>
+        <div slot="footer">
+          <Button type="primary" size="large" long @click="">{{ metricAdd ? '添加' : '更新' }}</Button>
+        </div>
+    </Modal>
+    <!-- metriv添加dialog end -->
   </div>
 </template>
 
 <script>
 import { getList, handleDelToServer } from '@/api/strategy';
-import { moduleDel } from '@/api/module';
+import { moduleDel, moduleAdd } from '@/api/module';
 import { getAppModuleTree } from '@/api/home';
 
 export default {
   data() {
+    var validateIp = (rule, value, callback) => {
+      var re = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])(\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])){3}$/
+      if (value === '') {
+        callback(new Error('请输入endPoint'));
+      } else if (!(re.test(value))) {
+        callback(new Error('endPoint格式不正确'));
+      } else {
+        callback();
+      }
+    };
+    var validateEmail = (rule, value, callback) => {
+      var re = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+      if (value === '') {
+        callback(new Error('请输入email'));
+      } else if (!(re.test(value))) {
+        callback(new Error('email格式不正确'));
+      } else {
+        callback();
+      }
+    };
     return {
       list: [],
       currentPage: 1,
@@ -129,6 +199,45 @@ export default {
       defaultProps: {
         children: 'children',
         label: 'name'
+      },
+      moduleAddName: null,
+      metricModal: false,
+      metricAdd: false,
+      formMetric: {
+        app: null,
+        module: null,
+        metric: null,
+        endPoint: null,
+        func: null,
+        operator: null,
+        rightValue: null,
+        maxStep: null,
+        step: 1000,
+        note: null,
+        email: null
+      },
+      rules: {
+        app: [
+          { required: true, message: '请选择app', trigger: 'blur' }
+        ],
+        metric: [
+          { required: true, message: '请输入metric', trigger: 'blur' }
+        ],
+        endPoint: [
+          { required: true, trigger: 'blur', validator: validateIp }
+        ],
+        func: [
+          { required: true, message: '请配置策略', trigger: 'blur' }
+        ],
+        maxStep: [
+          { required: true, message: '请输入maxStep', trigger: 'blur' }
+        ],
+        note: [
+          { required: true, message: '请输入备注', trigger: 'blur' }
+        ],
+        email: [
+          { required: true, trigger: 'blur', validator: validateEmail }
+        ]
       }
     }
   },
@@ -157,10 +266,7 @@ export default {
     },
     delToServer(id) {
       handleDelToServer(id).then((res) => {
-        this.$message({
-          type: 'success',
-          message: res.msg
-        })
+        this.$Message.success(res.msg)
         this.fetchList();
       }).catch((err) => {
         console.log(err)
@@ -168,10 +274,16 @@ export default {
     },
     delMoudleToServer(id) {
       moduleDel(id).then((res) => {
-        this.$message({
-          type: 'success',
-          message: res.msg
-        })
+        this.$Message.success(res.data)
+        this.fetchAppTree();
+        this.fetchList();
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    addModuleToServer(appId, moduleName) {
+      moduleAdd(appId, moduleName).then((res) => {
+        this.$Message.success('模块添加成功!')
         this.fetchAppTree();
         this.fetchList();
       }).catch((err) => {
@@ -181,6 +293,13 @@ export default {
     renderContent(h, { node, data, store }) {
       let trigger_add = Boolean(data.children) ? 'inline-block' : 'none'
       let trigger_del = Boolean(data.children) ? 'none' : 'inline-block'
+      let trigger_comfirm = true
+      let temp_children = []
+      if (data.children) {
+        data.children.map((child) => {
+          temp_children.push(child.name)
+        })
+      }
       const __moduleAdd_btn = h('el-button', {
         props: {
           type: 'success',
@@ -189,6 +308,38 @@ export default {
         },
         nativeOn: {
           click: () => {
+            this.$Modal.confirm({
+              onOk: () => {
+                if (!trigger_comfirm) {
+                  this.$Message.error('module重复，无法添加!')
+                } else {
+                  this.addModuleToServer(data.id, this.moduleAddName)
+                }
+              },
+              onCancel: () => {
+                this.$Message.info('取消操作')
+              },
+              render: (h) => {
+                return h('Input', {
+                  props: {
+                    value: null,
+                    autofocus: true,
+                    placeholder: '请输入需要添加的module名'
+                  },
+                  on: {
+                    input: (val) => {
+                      trigger_comfirm = true
+                      temp_children.forEach((child) => {
+                        if (child == val) {
+                          trigger_comfirm = false
+                        }
+                      })
+                      this.moduleAddName = val
+                    }
+                  }
+                })
+              }
+            })
           }
         }
       })
@@ -203,10 +354,7 @@ export default {
             this.delMoudleToServer(data.id)
           },
           'on-cancel': () => {
-            this.$message({
-              type: 'info',
-              message: '已取消删除'
-            })
+            this.$Message.info('已取消删除')
           }
         }
       }, [
@@ -252,10 +400,8 @@ export default {
       this.fetchList();
     },
     handleEdit (strategy) {
-      this.$message({
-        type: 'info',
-        message: '功能开发中...'
-      });
+      this.metricModal = true
+      this.metricAdd = false
     },
     handleDel (strategy) {
       this.$confirm('此操作将永久删除该条'+strategy.metric+'策略, 是否继续?', '提示', {
@@ -265,10 +411,7 @@ export default {
       }).then(() => {
         this.delToServer(strategy.id)
       }).catch(() => {
-        this.$message({
-          type: 'info',
-          message: '已取消删除'
-        });
+        this.$Message.info('已取消删除')
       })
     }
   },
@@ -298,5 +441,9 @@ export default {
     width: calc(99% - 140px);
     vertical-align: top;
   }
+}
+.strategy_input {
+  display: inline-block;
+  width: 31%;
 }
 </style>

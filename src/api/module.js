@@ -9,3 +9,14 @@ export function moduleDel(id) {
     }
   })
 }
+
+export function moduleAdd(appId, moduleName) {
+  return fetch({
+    url: '/module/add',
+    method: 'post',
+    data: {
+      appId,
+      moduleName
+    }
+  })
+}

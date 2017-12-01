@@ -129,6 +129,5 @@ export default {
   .table-expand .el-form-item {
     margin-right: 0;
     margin-bottom: 0;
-    width: 25%;
   }
 </style>

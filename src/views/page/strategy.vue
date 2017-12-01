@@ -10,7 +10,7 @@
           :render-content="renderContent"
           @node-click="handleNodeClick">
         </el-tree>
-        <el-button type="warning" size="mini" style="width:100%;" @click="metricModal = true; metricAdd = true">metric添加</el-button>
+        <el-button type="warning" size="mini" style="width:100%;" @click="metricModalAddBtn">metric添加</el-button>
       </div>
       <div class="strategyContent">
         <el-table :data="list" v-loading.body="listLoading" element-loading-text="拼命加载中" border fit highlight-current-row stripe>
@@ -91,7 +91,7 @@
           </el-table-column>
           <el-table-column label="操作" align="center" fixed="right" width="95">
             <template scope="scope">
-              <el-button type="primary" icon="edit" size="mini" :disabled="Boolean(scope.row.update_stat)" @click="handleEdit(scope.row)"></el-button>
+              <el-button type="primary" icon="edit" size="mini" :disabled="Boolean(scope.row.update_stat) || Boolean(scope.row.del_stat)" @click="handleEdit(scope.row)"></el-button>
               <el-button type="danger" icon="delete" size="mini" :disabled="Boolean(scope.row.del_stat)" @click="handleDel(scope.row)"></el-button>
             </template>
           </el-table-column>
@@ -117,14 +117,14 @@
       </p>
         <div style="text-align:center">
           <Form :model="formMetric" ref="dynamicValidateForm" :rules="rules" :label-width="80">
-            <FormItem label="所属模块" prop="app">
-              <Cascader :data="[]" trigger="hover"></Cascader>
+            <FormItem label="所属模块" prop="">
+              <Cascader :data="treeData" trigger="hover" v-model="ascaderMoudle" :disabled="!metricAdd"></Cascader>
             </FormItem>
             <FormItem label="metric" prop="metric">
-              <Input v-model="formMetric.metric" placeholder="Enter something..."></Input>
+              <Input v-model="formMetric.metric" placeholder="Enter something..." :disabled="!metricAdd"></Input>
             </FormItem>
             <FormItem label="endPoint" prop="endPoint">
-              <Input v-model="formMetric.endPoint" placeholder="Enter something..."></Input>
+              <Input v-model="formMetric.endPoint" placeholder="Enter something..." :disabled="!metricAdd"></Input>
             </FormItem>
             <FormItem label="策略" prop="func">
               <span>if</span>
@@ -148,12 +148,12 @@
               <Input v-model="formMetric.note" type="textarea" placeholder="Enter something..."></Input>
             </FormItem>
             <FormItem label="email" prop="email">
-              <Input v-model="formMetric.email" placeholder="Enter something..."></Input>
+              <Input v-model="formMetric.email" placeholder="多个email请用英文逗号分割"></Input>
             </FormItem>
           </Form>
         </div>
         <div slot="footer">
-          <Button type="primary" size="large" long @click="">{{ metricAdd ? '添加' : '更新' }}</Button>
+          <Button type="primary" size="large" long @click="handleMetricAdd(metricAdd)">{{ metricAdd ? '添加' : '更新' }}</Button>
         </div>
     </Modal>
     <!-- metriv添加dialog end -->
@@ -161,7 +161,7 @@
 </template>
 
 <script>
-import { getList, handleDelToServer } from '@/api/strategy';
+import { getList, handleDelToServer, addMetric, editMetric } from '@/api/strategy';
 import { moduleDel, moduleAdd } from '@/api/module';
 import { getAppModuleTree } from '@/api/home';
 
@@ -178,7 +178,8 @@ export default {
       }
     };
     var validateEmail = (rule, value, callback) => {
-      var re = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+      // var re = /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
+      var re = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})([,，]([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6}))*$/
       if (value === '') {
         callback(new Error('请输入email'));
       } else if (!(re.test(value))) {
@@ -198,12 +199,13 @@ export default {
       appId: null,
       defaultProps: {
         children: 'children',
-        label: 'name'
+        label: 'label'
       },
       moduleAddName: null,
       metricModal: false,
       metricAdd: false,
       formMetric: {
+        id: null,
         app: null,
         module: null,
         metric: null,
@@ -211,14 +213,15 @@ export default {
         func: null,
         operator: null,
         rightValue: null,
-        maxStep: null,
+        maxStep: 1,
         step: 1000,
         note: null,
         email: null
       },
+      ascaderMoudle: [],
       rules: {
-        app: [
-          { required: true, message: '请选择app', trigger: 'blur' }
+        ascaderMoudle: [
+          // { required: true, message: '请选择app', trigger: 'blur' }
         ],
         metric: [
           { required: true, message: '请输入metric', trigger: 'blur' }
@@ -230,7 +233,7 @@ export default {
           { required: true, message: '请配置策略', trigger: 'blur' }
         ],
         maxStep: [
-          { required: true, message: '请输入maxStep', trigger: 'blur' }
+          // { required: true, message: '请输入maxStep', trigger: 'blur' }
         ],
         note: [
           { required: true, message: '请输入备注', trigger: 'blur' }
@@ -290,6 +293,24 @@ export default {
         console.log(err)
       })
     },
+    addMetricToServer(formMetric) {
+      addMetric(formMetric).then((res) => {
+        this.$Message.success(res.msg)
+        this.fetchList()
+        this.metricModal = false
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    editMetricToServer(formMetric) {
+      editMetric(formMetric).then((res) => {
+        this.$Message.success(res.msg)
+        this.fetchList()
+        this.metricModal = false
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
     renderContent(h, { node, data, store }) {
       let trigger_add = Boolean(data.children) ? 'inline-block' : 'none'
       let trigger_del = Boolean(data.children) ? 'none' : 'inline-block'
@@ -297,7 +318,7 @@ export default {
       let temp_children = []
       if (data.children) {
         data.children.map((child) => {
-          temp_children.push(child.name)
+          temp_children.push(child.label)
         })
       }
       const __moduleAdd_btn = h('el-button', {
@@ -313,7 +334,7 @@ export default {
                 if (!trigger_comfirm) {
                   this.$Message.error('module重复，无法添加!')
                 } else {
-                  this.addModuleToServer(data.id, this.moduleAddName)
+                  this.addModuleToServer(data.value, this.moduleAddName)
                 }
               },
               onCancel: () => {
@@ -346,12 +367,12 @@ export default {
 
       const __moduleDel_btn = h('Poptip',{
         props: {
-          title: `确定删除模块：${data.name}？`,
+          title: `确定删除模块：${data.label}？`,
           confirm: true
         },
         on: {
           'on-ok': () => {
-            this.delMoudleToServer(data.id)
+            this.delMoudleToServer(data.value)
           },
           'on-cancel': () => {
             this.$Message.info('已取消删除')
@@ -393,13 +414,26 @@ export default {
       this.appId = null
       this.moduleId = null
       if (app.children) {
-        this.appId = app.id
+        this.appId = app.value
       } else {
-        this.moduleId = app.id
+        this.moduleId = app.value
       }
       this.fetchList();
     },
     handleEdit (strategy) {
+      this.ascaderMoudle = [strategy.app_id, strategy.module_id]
+      this.formMetric = {
+        id: strategy.id,
+        metric: strategy.metric,
+        endPoint: strategy.end_point,
+        func: strategy.func,
+        operator: strategy.operator,
+        rightValue: Number(strategy.right_value),
+        maxStep: strategy.max_step,
+        step: strategy.step,
+        note: strategy.note,
+        email: strategy.email
+      }
       this.metricModal = true
       this.metricAdd = false
     },
@@ -413,6 +447,49 @@ export default {
       }).catch(() => {
         this.$Message.info('已取消删除')
       })
+    },
+    metricModalAddBtn () {
+      this.ascaderMoudle = []
+      this.formMetric = {
+        app: null,
+        module: null,
+        metric: null,
+        endPoint: null,
+        func: null,
+        operator: null,
+        rightValue: null,
+        maxStep: 1,
+        step: 1000,
+        note: null,
+        email: null
+      }
+      this.metricModal = true
+      this.metricAdd = true
+    },
+    handleMetricAdd (isAdd) {
+      if (isAdd) { // 添加
+        if (this.ascaderMoudle.length == 0) { // 表单验证 app
+          this.$Message.error('请选择metric所属app模块')
+        } else {
+          this.formMetric.app = this.ascaderMoudle[0]
+          this.formMetric.module = this.ascaderMoudle[1]
+          this.$refs['dynamicValidateForm'].validate((valid) => {
+            if (valid) {
+              this.addMetricToServer(this.formMetric)
+            } else {
+              this.$Message.error('表单验证失败');
+            }
+          })
+        }
+      } else { // 编辑
+        this.$refs['dynamicValidateForm'].validate((valid) => {
+          if (valid) {
+            this.editMetricToServer(this.formMetric)
+          } else {
+            this.$Message.error('表单验证失败');
+          }
+        })
+      }
     }
   },
   mounted() {

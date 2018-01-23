@@ -1,17 +1,54 @@
 <template>
   <div class="app-container">
+    <div class="condtion_container">
+      <div class="condtion_item">
+        <span class="label">时间范围</span>
+        <DatePicker
+          type="daterange"
+          v-model="condition.timeRange"
+          placement="bottom-start"
+          placeholder="请选择时间范围"
+          confirm
+          style="width: 200px"
+          @on-ok="fetchList"
+          @on-clear="clearTime">
+        </DatePicker>
+      </div>
+      <div class="condtion_item">
+        <span class="label">系统</span>
+        <Select v-model="condition.appId" style="width:100px" clearable @on-change="fetchList">
+          <!-- <Option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</Option> -->
+          <Option v-for="app in appList" :value="app.id" :key="app.id">{{ app.name }}</Option>
+        </Select>
+      </div>
+      <div class="condtion_item">
+        <span class="label">状态</span>
+        <Select v-model="condition.status" style="width:100px" @on-change="fetchList">
+          <!-- <Option v-for="item in cityList" :value="item.value" :key="item.value">{{ item.label }}</Option> -->
+          <Option :value="-1" :key="-1">{{ '所有' }}</Option>
+          <Option :value="1" :key="1">{{ '已修复' }}</Option>
+          <Option :value="0" :key="0">{{ '未修复' }}</Option>
+        </Select>
+      </div>
+    </div>
     <el-table :data="list" v-loading.body="listLoading" element-loading-text="拼命加载中" border fit highlight-current-row stripe>
       <el-table-column type="expand">
         <template scope="props">
           <el-form label-position="left" inline class="table-expand">
             <el-form-item label="CPU">
-              <span>{{ props.row.CPU }}</span>
+              <div v-for="value, label in JSON.parse(props.row.CPU)" v-if="value">{{ (label + ':' + value) }}</div>
             </el-form-item>
             <el-form-item label="MEMORY">
-              <span>{{ props.row.MEMORY }}</span>
+              <div v-for="value, label in JSON.parse(props.row.MEMORY)" v-if="value">{{ (label + ':' + value) }}</div>
             </el-form-item>
             <el-form-item label="DISK">
-              <span>{{ props.row.DISK }}</span>
+              <div v-for="value, label in JSON.parse(props.row.DISK)" v-if="value">{{ (label + ':' + value) }}</div>
+            </el-form-item>
+            <el-form-item label="故障快照" v-if="props.row.snapshot">
+              <vue-images
+                :imgs="[{imageUrl: props.row.snapshot}]"
+                modalclose>
+              </vue-images>
             </el-form-item>
           </el-form>
         </template>
@@ -68,6 +105,9 @@
 
 <script>
 import { getList } from '@/api/record'
+import { getAppModuleList } from '@/api/home'
+const vueImages = require('vue-images')
+
 export default {
   data() {
     return {
@@ -75,8 +115,17 @@ export default {
       perItem: 15,
       currentPage: 1,
       listLoading: false,
-      totalItem: 100
+      totalItem: 100,
+      appList: [],
+      condition: {
+        appId: 0,
+        timeRange: [],
+        status: -1
+      }
     }
+  },
+  components: {
+    vueImages: vueImages.default
   },
   filters: {
     statusFilter(status) {
@@ -92,7 +141,11 @@ export default {
     fetchList() {
       getList({
         perItem: this.perItem,
-        currentPage: this.currentPage
+        currentPage: this.currentPage,
+        app_id: this.condition.appId,
+        timeStart: this.condition.timeRange[0],
+        timeEnd: this.condition.timeRange[1],
+        status: this.condition.status
       }).then((res) => {
         this.list = res.data.rows
         this.totalItem = res.data.count
@@ -100,20 +153,36 @@ export default {
         console.log(err)
       })
     },
+    fetchAppList() {
+      getAppModuleList()
+        .then((res) => {
+          this.appList = res.data
+        }).catch((err) => {
+          console.log(err)
+        })
+    },
     handleSizeChange(size) {
-      this.perItem = size;
-      this.fetchList();
+      this.perItem = size
+      this.fetchList()
     },
     handleCurrentChange(index) {
-      this.currentPage = index;
-      this.fetchList();
+      this.currentPage = index
+      this.fetchList()
     },
     formatTime(d) {
       return d.getFullYear() + '/' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours() + ':' + d.getMinutes() + ':' + d.getSeconds()
+    },
+    clearTime() {
+      this.condition.timeRange = []
+      this.fetchList()
     }
   },
   mounted() {
-    this.fetchList()
+    if (this.$route.query.app) {
+      this.condition.appId = this.$route.query.app
+      this.condition.status = 0
+    }
+    this.fetchAppList()
   }
 }
 </script>
@@ -128,6 +197,18 @@ export default {
   }
   .table-expand .el-form-item {
     margin-right: 0;
-    margin-bottom: 0;
+    margin-bottom: 20px;
+    width: 50%;
+  }
+  .condtion_container {
+    .condtion_item {
+      display: inline-block;
+      margin-right: 40px;
+      border-radius: 5px;
+      background: #4f96c0;
+      .label {
+        color: #fff;
+      }
+    }
   }
 </style>

@@ -1,12 +1,12 @@
 <template>
   <div class="app-container">
     <div class="_dashboard">
-      <el-card class="_card" :body-style="{ padding: '0px' }" v-for="app in appStatus" :key="app.code">
+      <el-card class="_card" :body-style="{ padding: '0px', cursor: (app.status ? 'auto' : 'pointer') }" v-for="app in appStatus" :key="app.code" @click.native="itemDetail(app)">
         <img :src="require('@/assets/app_logo/'+app.code+'.png')" class="image">
-        <div style="padding: 14px;">
+        <div style="padding: 18px;">
           <span class="_tag" :style="app.status ? 'background:#19be6b;' : 'background:#ed3f14'"></span>
-          <span style="font-size:14px;">{{ app.name }}</span>
-          <div class="bottom clearfix" style="font-size:12px;">
+          <span style="font-size:20px;">{{ app.name }}</span>
+          <div class="bottom clearfix" style="font-size:20px;">
             {{ app.status ? '正常' : '异常模块：' + app.module }}
           </div>
         </div>
@@ -57,6 +57,17 @@ export default {
       }).catch((err) => {
         console.log(err)
       })
+    },
+    itemDetail (app) {
+      if (!app.error) {
+        let appId = null
+        this.appModuleList.forEach((_app) => {
+          if (_app.CODE === app.code) {
+            appId = _app.id
+          }
+        })
+        this.$router.push({ path: '/record/index', query: { app: appId, fixed: 0 }})
+      }
     }
   },
   mounted() {
@@ -103,8 +114,8 @@ export default {
 }
 ._card {
   display: inline-block;
-  width: 200px;
-  height: 275px;
+  width: 210px;
+  height: 300px;
   margin: 15px;
 }
 ._tag {

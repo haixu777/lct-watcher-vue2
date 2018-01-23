@@ -74,6 +74,11 @@
               {{scope.row.max_step}}
             </template>
           </el-table-column>
+          <el-table-column label="数据类型" width="130" align="center">
+            <template scope="scope">
+              {{ scope.row.dataType }}
+            </template>
+          </el-table-column>
           <el-table-column label="note" width="130" align="center">
             <template scope="scope">
               {{scope.row.note}}
@@ -143,6 +148,12 @@
               <InputNumber :max="10" :min="1" v-model="formMetric.maxStep" style="float:left;"></InputNumber>
               <span style="">间隔</span>
               <InputNumber :max="10000" :min="1000" :step="100" v-model="formMetric.step" style=""></InputNumber>
+            </FormItem>
+            <FormItem label="dataType" prop="dataType">
+              <Select v-model="formMetric.dataType" placeholder="数据类型">
+                <Option value="GAUGE">GAUGE</Option>
+                <Option value="COUNTER">COUNTER</Option>
+              </Select>
             </FormItem>
             <FormItem label="note" prop="note">
               <Input v-model="formMetric.note" type="textarea" placeholder="Enter something..."></Input>
@@ -216,7 +227,8 @@ export default {
         maxStep: 1,
         step: 1000,
         note: null,
-        email: null
+        email: null,
+        dataType: 'GAUGE'
       },
       ascaderMoudle: [],
       rules: {
@@ -240,6 +252,9 @@ export default {
         ],
         email: [
           { required: true, trigger: 'blur', validator: validateEmail }
+        ],
+        dataType: [
+          { required: true, trigger: 'blur' }
         ]
       }
     }
@@ -432,7 +447,8 @@ export default {
         maxStep: strategy.max_step,
         step: strategy.step,
         note: strategy.note,
-        email: strategy.email
+        email: strategy.email,
+        dataType: 'GAUGE'
       }
       this.metricModal = true
       this.metricAdd = false
@@ -461,7 +477,8 @@ export default {
         maxStep: 1,
         step: 1000,
         note: null,
-        email: null
+        email: null,
+        dataType: 'GAUGE'
       }
       this.metricModal = true
       this.metricAdd = true

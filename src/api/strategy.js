@@ -29,7 +29,8 @@ export function addMetric(formMetric) {
       maxStep = formMetric.maxStep,
       step = formMetric.step,
       note = formMetric.note,
-      email = formMetric.email
+      email = formMetric.email,
+      dataType = formMetric.dataType
   return fetch({
     url: '/strategy/add',
     method: 'post',
@@ -44,7 +45,8 @@ export function addMetric(formMetric) {
       maxStep,
       step,
       note,
-      email
+      email,
+      dataType
     }
   })
 }
@@ -57,7 +59,8 @@ export function editMetric(formMetric) {
       maxStep = formMetric.maxStep,
       step = formMetric.step,
       note = formMetric.note,
-      email = formMetric.email
+      email = formMetric.email,
+      dataType = formMetric.dataType
   return fetch({
     url: '/strategy/update',
     method: 'post',
@@ -69,7 +72,8 @@ export function editMetric(formMetric) {
       maxStep,
       step,
       note,
-      email
+      email,
+      dataType
     }
   })
 }

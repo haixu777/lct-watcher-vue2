@@ -59,7 +59,7 @@ export default {
       })
     },
     itemDetail (app) {
-      if (!app.error) {
+      if (!app.status) {
         let appId = null
         this.appModuleList.forEach((_app) => {
           if (_app.CODE === app.code) {

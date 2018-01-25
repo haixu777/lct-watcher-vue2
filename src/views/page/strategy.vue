@@ -1,5 +1,12 @@
 <template>
   <div class="app-container">
+    <div class="condition_area">
+      <RadioGroup v-model="range" type="button" size="small" @on-change="fetchList">
+        <Radio label="0">内网</Radio>
+        <Radio label="-1">全部</Radio>
+        <Radio label="1">外网</Radio>
+      </RadioGroup>
+    </div>
     <div class="strategy_container">
       <div class="strategyTree">
         <h3 class="strategyTree_title">APP</h3>
@@ -14,36 +21,6 @@
       </div>
       <div class="strategyContent">
         <el-table :data="list" v-loading.body="listLoading" element-loading-text="拼命加载中" border fit highlight-current-row stripe>
-          <!-- <el-table-column type="expand">
-            <template scope="props">
-              <el-form label-position="left" inline class="table-expand">
-                <el-form-item label="CPU">
-                  <span>{{ props.row.CPU }}</span>
-                </el-form-item>
-                <el-form-item label="MEMORY">
-                  <span>{{ props.row.MEMORY }}</span>
-                </el-form-item>
-                <el-form-item label="DISK">
-                  <span>{{ props.row.DISK }}</span>
-                </el-form-item>
-              </el-form>
-            </template>
-          </el-table-column> -->
-          <!-- <el-table-column align="center" label="序号" width="65">
-            <template scope="scope">
-              {{scope.$index+1}}
-            </template>
-          </el-table-column> -->
-          <!-- <el-table-column align="center" label='系统' width="95" fixed>
-            <template scope="scope">
-              {{scope.row.module.app.name}}
-            </template>
-          </el-table-column>
-          <el-table-column label="模块" width="110" align="center">
-            <template scope="scope">
-              {{scope.row.module.name}}
-            </template>
-          </el-table-column> -->
           <el-table-column label="metric" width="110" align="center">
             <template scope="scope">
               <span>{{scope.row.metric}}</span>
@@ -125,6 +102,12 @@
             <FormItem label="所属模块" prop="">
               <Cascader :data="treeData" trigger="hover" v-model="ascaderMoudle" :disabled="!metricAdd"></Cascader>
             </FormItem>
+            <FormItem label="所属范围" prop="range">
+              <Select v-model="formMetric.range" placeholder="所属范围" :disabled="!metricAdd">
+                <Option value="0">内网</Option>
+                <Option value="1">外网</Option>
+              </Select>
+            </FormItem>
             <FormItem label="metric" prop="metric">
               <Input v-model="formMetric.metric" placeholder="Enter something..." :disabled="!metricAdd"></Input>
             </FormItem>
@@ -146,8 +129,8 @@
             </FormItem>
             <FormItem label="maxStep" prop="maxStep">
               <InputNumber :max="10" :min="1" v-model="formMetric.maxStep" style="float:left;"></InputNumber>
-              <span style="">间隔</span>
-              <InputNumber :max="10000" :min="1000" :step="100" v-model="formMetric.step" style=""></InputNumber>
+              <span style="">间隔S</span>
+              <InputNumber :max="86400" :min="1" :step="10" v-model="formMetric.step" style=""></InputNumber>
             </FormItem>
             <FormItem label="dataType" prop="dataType">
               <Select v-model="formMetric.dataType" placeholder="数据类型">
@@ -208,6 +191,7 @@ export default {
       treeData: [],
       moduleId: null,
       appId: null,
+      range: -1,
       defaultProps: {
         children: 'children',
         label: 'label'
@@ -225,10 +209,11 @@ export default {
         operator: null,
         rightValue: null,
         maxStep: 1,
-        step: 1000,
+        step: 1,
         note: null,
         email: null,
-        dataType: 'GAUGE'
+        dataType: 'GAUGE',
+        range: 0
       },
       ascaderMoudle: [],
       rules: {
@@ -255,6 +240,9 @@ export default {
         ],
         dataType: [
           { required: true, trigger: 'blur' }
+        ],
+        range: [
+          { required: true, trigger: 'blur' }
         ]
       }
     }
@@ -265,7 +253,8 @@ export default {
         perItem: this.perItem,
         currentPage: this.currentPage,
         appId: this.appId,
-        moduleId: this.moduleId
+        moduleId: this.moduleId,
+        range: this.range
       }).then((res) => {
         this.list = res.data.rows
         this.totalItem = res.data.count
@@ -448,7 +437,8 @@ export default {
         step: strategy.step,
         note: strategy.note,
         email: strategy.email,
-        dataType: 'GAUGE'
+        dataType: strategy.dataType,
+        range: strategy.intranet + ''
       }
       this.metricModal = true
       this.metricAdd = false
@@ -475,10 +465,11 @@ export default {
         operator: null,
         rightValue: null,
         maxStep: 1,
-        step: 1000,
+        step: 10,
         note: null,
         email: null,
-        dataType: 'GAUGE'
+        dataType: 'GAUGE',
+        range: 0
       }
       this.metricModal = true
       this.metricAdd = true

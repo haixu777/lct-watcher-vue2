@@ -30,7 +30,8 @@ export function addMetric(formMetric) {
       step = formMetric.step,
       note = formMetric.note,
       email = formMetric.email,
-      dataType = formMetric.dataType
+      dataType = formMetric.dataType,
+      range = formMetric.range
   return fetch({
     url: '/strategy/add',
     method: 'post',
@@ -46,7 +47,8 @@ export function addMetric(formMetric) {
       step,
       note,
       email,
-      dataType
+      dataType,
+      range
     }
   })
 }

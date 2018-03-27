@@ -92,7 +92,7 @@
     </div>
 
     <!-- metric添加dialog start -->
-    <Modal v-model="metricModal" width="400">
+    <Modal v-model="metricModal" width="450" @on-cancel="cancel">
       <p slot="header" style="color:#f7ba2a;text-align:center">
         <Icon type="information-circled"></Icon>
         <span>{{ metricAdd ? 'metric添加' : 'metric编辑' }}</span>
@@ -104,8 +104,8 @@
             </FormItem>
             <FormItem label="所属范围" prop="range">
               <Select v-model="formMetric.range" placeholder="所属范围" :disabled="!metricAdd">
-                <Option value="0">内网</Option>
-                <Option value="1">外网</Option>
+                <Option :value="0">内网</Option>
+                <Option :value="1">外网</Option>
               </Select>
             </FormItem>
             <FormItem label="metric" prop="metric">
@@ -116,7 +116,12 @@
             </FormItem>
             <FormItem label="策略" prop="func">
               <span>if</span>
-              <Input v-model="formMetric.func" class="strategy_input" placeholder="all(#1)"></Input>
+              <!-- <Input v-model="formMetric.func" class="strategy_input" placeholder="all(#1)"></Input> -->
+              <Select v-model="formMetric.func" class="strategy_input" placeholder="">
+                <Option value="all(#)">all(#)</Option>
+                <Option value="avg(#)">avg(#)</Option>
+              </Select>
+              <InputNumber class="strategy_input" :max="10" :min="1" v-model="formMetric.funcNum" placeholder="funcNum"></InputNumber>
               <Select v-model="formMetric.operator" class="strategy_input" placeholder="operator">
                 <Option value="==">==</Option>
                 <Option value="!=">!=</Option>
@@ -206,6 +211,7 @@ export default {
         metric: null,
         endPoint: null,
         func: null,
+        funcNum: 1,
         operator: null,
         rightValue: null,
         maxStep: 1,
@@ -242,7 +248,7 @@ export default {
           { required: true, trigger: 'blur' }
         ],
         range: [
-          { required: true, trigger: 'blur' }
+          // { required: true, trigger: 'blur' }
         ]
       }
     }
@@ -425,12 +431,14 @@ export default {
       this.fetchList();
     },
     handleEdit (strategy) {
+      let funcNum = Number(strategy.func.replace(/[^0-9]/ig,""))
       this.ascaderMoudle = [strategy.app_id, strategy.module_id]
       this.formMetric = {
         id: strategy.id,
         metric: strategy.metric,
         endPoint: strategy.end_point,
-        func: strategy.func,
+        func: strategy.func.replace(funcNum, ''),
+        funcNum: funcNum,
         operator: strategy.operator,
         rightValue: Number(strategy.right_value),
         maxStep: strategy.max_step,
@@ -440,6 +448,7 @@ export default {
         dataType: strategy.dataType,
         range: strategy.intranet + ''
       }
+      console.log(this.formMetric.func)
       this.metricModal = true
       this.metricAdd = false
     },
@@ -462,6 +471,7 @@ export default {
         metric: null,
         endPoint: null,
         func: null,
+        funcNum: 1,
         operator: null,
         rightValue: null,
         maxStep: 1,
@@ -474,6 +484,10 @@ export default {
       this.metricModal = true
       this.metricAdd = true
     },
+    cancel () {
+      this.formMetric.range = 0
+      this.$refs['dynamicValidateForm'].resetFields()
+    },
     handleMetricAdd (isAdd) {
       if (isAdd) { // 添加
         if (this.ascaderMoudle.length == 0) { // 表单验证 app
@@ -483,6 +497,7 @@ export default {
           this.formMetric.module = this.ascaderMoudle[1]
           this.$refs['dynamicValidateForm'].validate((valid) => {
             if (valid) {
+              this.formMetric.func = this.formMetric.func.replace(/#/, '#'+this.formMetric.funcNum)
               this.addMetricToServer(this.formMetric)
             } else {
               this.$Message.error('表单验证失败');
@@ -492,6 +507,7 @@ export default {
       } else { // 编辑
         this.$refs['dynamicValidateForm'].validate((valid) => {
           if (valid) {
+            this.formMetric.func = this.formMetric.func.replace(/#/, '#'+this.formMetric.funcNum)
             this.editMetricToServer(this.formMetric)
           } else {
             this.$Message.error('表单验证失败');
@@ -529,6 +545,6 @@ export default {
 }
 .strategy_input {
   display: inline-block;
-  width: 31%;
+  width: 22%;
 }
 </style>

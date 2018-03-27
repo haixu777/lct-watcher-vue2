@@ -23,13 +23,14 @@ export default {
       appStatus: [
         { name: '预制拦截', code: 'YZLJ', note: '', module: '', status: 1 },
         { name: '全网清查', code: 'QWQC', note: '', module: '', status: 1 },
-        { name: '论坛贴吧', code: 'LTTB', note: '', module: '', status: 1 },
+        { name: '论坛贴吧(内)', code: 'LTTB', note: '', module: '', status: 1 },
         { name: '聚合搜索', code: 'JHSS', note: '', module: '', status: 1 },
         { name: '相似系统', code: 'XSXT', note: '', module: '', status: 1 },
         { name: '音视频', code: 'YSP', note: '', module: '', status: 1 },
         { name: '直播系统', code: 'ZBXT', note: '', module: '', status: 1 },
         { name: '账号系统', code: 'ZHXT', note: '', module: '', status: 1 },
         { name: '关键词系统', code: 'GJC', note: '', module: '', status: 1 },
+        { name: '论坛贴吧(外)', code: 'LTTBW', note: '', module: '', status: 1 },
       ],
       appModuleList: [],
       currentStatus: []

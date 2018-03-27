@@ -47,6 +47,7 @@
             <el-form-item label="故障快照" v-if="props.row.snapshot">
               <vue-images
                 :imgs="[{imageUrl: props.row.snapshot}]"
+                class="snapshot_photo"
                 modalclose>
               </vue-images>
             </el-form-item>
@@ -83,10 +84,18 @@
           <el-tag :type="scope.row.fixed | statusFilter">{{ scope.row.fixed ? '已修复' : '故障中'}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column align="center" prop="time" label="时间" width="200">
+      <el-table-column align="center" prop="time" label="时间" width="250">
         <template scope="scope">
-          <i class="el-icon-time"></i>
-          <span>{{formatTime(new Date(scope.row.time))}}</span>
+          <p>
+            <span style="color:#f30;">发生</span>
+            <i class="el-icon-time"></i>
+            <span>{{formatTime(new Date(scope.row.time))}}</span>
+          </p>
+          <p v-if="scope.row.fix_time">
+            <span style="color:#13ce66;">修复</span>
+            <i class="el-icon-time"></i>
+            <span>{{formatTime(new Date(scope.row.time))}}</span>
+          </p>
         </template>
       </el-table-column>
     </el-table>
@@ -199,6 +208,18 @@ export default {
     margin-right: 0;
     margin-bottom: 20px;
     width: 50%;
+    .snapshot_photo {
+      img {
+        width: 100%;
+        height: 250px;
+        border: 3px solid #13ce66;
+      }
+    }
+  }
+  .fancybox .image-wrapper .image {
+    max-height: calc(100vh - 180px) !important;
+    height: calc(100vh - 180px) !important;
+    min-height: 200px;
   }
   .condtion_container {
     .condtion_item {

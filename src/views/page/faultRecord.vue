@@ -94,7 +94,7 @@
           <p v-if="scope.row.fix_time">
             <span style="color:#13ce66;">修复</span>
             <i class="el-icon-time"></i>
-            <span>{{formatTime(new Date(scope.row.time))}}</span>
+            <span>{{formatTime(new Date(scope.row.fix_time))}}</span>
           </p>
         </template>
       </el-table-column>
